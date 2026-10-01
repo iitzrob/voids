@@ -15,10 +15,6 @@ const {
   logRoleDelete,
   logRoleUpdate,
 
-  logChannelCreate,
-  logChannelDelete,
-  logChannelUpdate,
-
   logGuildUpdate,
 } = require('../utils/logger');
 
@@ -438,109 +434,6 @@ module.exports = {
 
           console.error(
             '[LOGGER] roleUpdate logging failed:',
-            err
-          );
-        }
-      }
-    );
-
-
-    /* =====================================================
-       CHANNEL CREATED
-    ===================================================== */
-
-    client.on(
-      'channelCreate',
-      async (channel) => {
-
-        try {
-
-          if (
-            isLoggerServer(
-              channel.guild
-            )
-          ) {
-            return;
-          }
-
-          await logChannelCreate(
-            channel
-          );
-
-        } catch (err) {
-
-          console.error(
-            '[LOGGER] channelCreate logging failed:',
-            err
-          );
-        }
-      }
-    );
-
-
-    /* =====================================================
-       CHANNEL DELETED
-    ===================================================== */
-
-    client.on(
-      'channelDelete',
-      async (channel) => {
-
-        try {
-
-          if (
-            isLoggerServer(
-              channel.guild
-            )
-          ) {
-            return;
-          }
-
-          await logChannelDelete(
-            channel
-          );
-
-        } catch (err) {
-
-          console.error(
-            '[LOGGER] channelDelete logging failed:',
-            err
-          );
-        }
-      }
-    );
-
-
-    /* =====================================================
-       CHANNEL UPDATED
-    ===================================================== */
-
-    client.on(
-      'channelUpdate',
-      async (
-        oldChannel,
-        newChannel
-      ) => {
-
-        try {
-
-          if (
-            isLoggerServer(
-              newChannel.guild
-            )
-          ) {
-            return;
-          }
-
-          await logChannelUpdate(
-            oldChannel,
-            newChannel
-          );
-
-        } catch (err) {
-
-          console.error(
-            '[LOGGER] channelUpdate logging failed:',
             err
           );
         }
