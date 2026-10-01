@@ -1,7 +1,5 @@
-const { startTikTokPolling } = require('../utils/tiktokLive');
 const { rearmActiveGiveaways } = require('../utils/giveawayManager');
 const { startDailyGiveawayLoop } = require('../utils/dailyGiveaway');
-const { startDailyQuoteLoop } = require('../utils/dailyQuote');
 const { rearmTempBans } = require('../utils/tempBanManager');
 
 module.exports = {
@@ -9,7 +7,6 @@ module.exports = {
   once: true,
   execute(client) {
     console.log(`✅ Logged in as ${client.user.tag}`);
-    startTikTokPolling(client);
 
     if (typeof rearmActiveGiveaways === 'function') {
       rearmActiveGiveaways(client);
@@ -24,7 +21,6 @@ module.exports = {
     rearmTempBans(client);
 
     startDailyGiveawayLoop(client);
-    startDailyQuoteLoop(client);
 
     const statuses = [
       { name: 'looking for staff so apply', type: 2 },
