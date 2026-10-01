@@ -169,6 +169,9 @@ async function getTrackerMessage(channel, userId, entry) {
  * Creates a tracker only when one does not already exist.
  */
 async function ensureStaffEmbed(guild, userId) {
+  // Staff tracker disabled.
+  return null;
+
   const channelId = config.staffTrackerChannelId;
 
   if (
@@ -262,6 +265,9 @@ async function incrementStat(
   userId,
   statKey
 ) {
+  // Staff tracker disabled.
+  return;
+
   const channelId =
     config.staffTrackerChannelId;
 
