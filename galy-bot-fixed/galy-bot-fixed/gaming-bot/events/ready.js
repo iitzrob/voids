@@ -36,10 +36,29 @@ module.exports = {
         afterGC = mb(process.memoryUsage().heapUsed) + 'MB';
       }
       const members = client.guilds.cache.reduce((n, g) => n + g.members.cache.size, 0);
+
+      // Extra numbers to find what is growing: cached messages, timers waiting,
+      // and requests to Discord still queued up (rest=handlers/queued).
+      let messages = 0;
+      client.channels.cache.forEach((c) => { if (c.messages) messages += c.messages.cache.size; });
+      let timers = 'n/a';
+      try {
+        if (typeof process.getActiveResourcesInfo === 'function') {
+          timers = process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length;
+        }
+      } catch {}
+      let queued = 0;
+      let handlers = 0;
+      try {
+        handlers = client.rest.handlers.size;
+        client.rest.handlers.forEach((h) => { queued += Number(h.queueRemaining) || 0; });
+      } catch {}
+
       console.log(
         `[MEM] rss=${mb(before.rss)}MB heapUsed=${mb(before.heapUsed)}MB afterGC=${afterGC} ` +
         `external=${mb(before.external)}MB | guilds=${client.guilds.cache.size} ` +
-        `members=${members} users=${client.users.cache.size}`
+        `members=${members} users=${client.users.cache.size} messages=${messages} ` +
+        `timers=${timers} rest=${handlers}/${queued}`
       );
     };
     setTimeout(memReport, 2 * 60 * 1000);
