@@ -1,6 +1,14 @@
+const { PermissionFlagsBits } = require('discord.js');
 const config = require('../config.json');
 
-function isAdmin(member) {
+// "Max perms": anyone with the Administrator permission (the server owner
+// always has it). They pass every staff check below EXCEPT /ban, which uses
+// isAdminRole (the configured Admin role only).
+function hasMaxPerms(member) {
+  return !!member?.permissions?.has(PermissionFlagsBits.Administrator);
+}
+
+function isAdminRole(member) {
   if (!member) return false;
 
   return (config.adminRoleIds || []).some(
@@ -11,8 +19,13 @@ function isAdmin(member) {
   );
 }
 
+function isAdmin(member) {
+  return hasMaxPerms(member) || isAdminRole(member);
+}
+
 function isSupport(member) {
   if (!member) return false;
+  if (hasMaxPerms(member)) return true;
 
   return (config.supportRoleIds || []).some(
     (roleId) =>
@@ -27,6 +40,7 @@ function isMod(member) {
 
   // Whitelisted user
   if (member.id === '1492833649123393676') return true;
+  if (hasMaxPerms(member)) return true;
 
   return (config.modRoleIds || []).some(
     (roleId) =>
@@ -59,6 +73,8 @@ function canModerate(moderator, target) {
 
 module.exports = {
   isAdmin,
+  isAdminRole,
+  hasMaxPerms,
   isSupport,
   isMod,
   canModerate,
