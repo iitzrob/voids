@@ -23,24 +23,27 @@ module.exports = {
     startDailyGiveawayLoop(client);
 
     // Memory report (temporary, for finding out where RAM goes). Logs once
-    // after 2 minutes, then every 30 minutes. Search the logs for "[MEM]".
+    // after 2 minutes, then every 10 minutes. Search the logs for "[MEM]".
+    // "afterGC" is the heap after a forced garbage collection (needs the
+    // --expose-gc node flag): if it stays flat the bot is only slow to clean
+    // up, if it keeps climbing something is really holding on to memory.
     const memReport = () => {
-      const m = process.memoryUsage();
       const mb = (n) => Math.round(n / 1048576);
-      const members = client.guilds.cache.reduce((n, g) => n + g.members.cache.size, 0);
-      const channels = client.guilds.cache.reduce((n, g) => n + g.channels.cache.size, 0);
-      let messages = 0;
-      for (const g of client.guilds.cache.values()) {
-        for (const c of g.channels.cache.values()) messages += c.messages?.cache?.size || 0;
+      const before = process.memoryUsage();
+      let afterGC = 'n/a';
+      if (typeof global.gc === 'function') {
+        global.gc();
+        afterGC = mb(process.memoryUsage().heapUsed) + 'MB';
       }
+      const members = client.guilds.cache.reduce((n, g) => n + g.members.cache.size, 0);
       console.log(
-        `[MEM] rss=${mb(m.rss)}MB heapUsed=${mb(m.heapUsed)}MB heapTotal=${mb(m.heapTotal)}MB ` +
-        `external=${mb(m.external)}MB | guilds=${client.guilds.cache.size} channels=${channels} ` +
-        `members=${members} users=${client.users.cache.size} messages=${messages}`
+        `[MEM] rss=${mb(before.rss)}MB heapUsed=${mb(before.heapUsed)}MB afterGC=${afterGC} ` +
+        `external=${mb(before.external)}MB | guilds=${client.guilds.cache.size} ` +
+        `members=${members} users=${client.users.cache.size}`
       );
     };
     setTimeout(memReport, 2 * 60 * 1000);
-    setInterval(memReport, 30 * 60 * 1000);
+    setInterval(memReport, 10 * 60 * 1000);
 
     const statuses = [
       { name: 'looking for staff so apply', type: 2 },
