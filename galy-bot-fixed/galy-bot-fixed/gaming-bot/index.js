@@ -8,6 +8,7 @@ const {
   GatewayIntentBits,
   Collection,
   Partials,
+  Options,
 } = require('discord.js');
 
 
@@ -22,8 +23,30 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildVoiceStates,
   ],
+
+  // Keep memory low: small message cache, and don't cache things this bot
+  // never reads (voice states, presences, reactions, invites, bans, stages).
+  makeCache: Options.cacheWithLimits({
+    ...Options.DefaultMakeCacheSettings,
+    MessageManager: 50,
+    VoiceStateManager: 0,
+    PresenceManager: 0,
+    ReactionManager: 0,
+    GuildInviteManager: 0,
+    GuildBanManager: 0,
+    StageInstanceManager: 0,
+    ThreadMemberManager: 0,
+  }),
+
+  // Drop cached messages older than 30 minutes, checked every 5 minutes.
+  sweepers: {
+    ...Options.DefaultSweeperSettings,
+    messages: {
+      interval: 300,
+      lifetime: 1800,
+    },
+  },
 
   partials: [
     Partials.Channel,
