@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { isAdmin } = require('../utils/permissions');
+const { isAdminRole } = require('../utils/permissions');
 const { logModAction } = require('../utils/modLog');
 
 module.exports = {
@@ -28,8 +28,8 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    // Only Admin can use /ban
-    if (!isAdmin(interaction.member)) {
+    // Only the Admin role can use /ban (Administrator permission alone is not enough)
+    if (!isAdminRole(interaction.member)) {
       return interaction.reply({
         content: '❌ You need the **Admin** role to use this command.',
         ephemeral: true,
