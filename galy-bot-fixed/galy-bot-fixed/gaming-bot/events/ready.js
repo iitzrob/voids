@@ -22,6 +22,26 @@ module.exports = {
 
     startDailyGiveawayLoop(client);
 
+    // Memory report (temporary, for finding out where RAM goes). Logs once
+    // after 2 minutes, then every 30 minutes. Search the logs for "[MEM]".
+    const memReport = () => {
+      const m = process.memoryUsage();
+      const mb = (n) => Math.round(n / 1048576);
+      const members = client.guilds.cache.reduce((n, g) => n + g.members.cache.size, 0);
+      const channels = client.guilds.cache.reduce((n, g) => n + g.channels.cache.size, 0);
+      let messages = 0;
+      for (const g of client.guilds.cache.values()) {
+        for (const c of g.channels.cache.values()) messages += c.messages?.cache?.size || 0;
+      }
+      console.log(
+        `[MEM] rss=${mb(m.rss)}MB heapUsed=${mb(m.heapUsed)}MB heapTotal=${mb(m.heapTotal)}MB ` +
+        `external=${mb(m.external)}MB | guilds=${client.guilds.cache.size} channels=${channels} ` +
+        `members=${members} users=${client.users.cache.size} messages=${messages}`
+      );
+    };
+    setTimeout(memReport, 2 * 60 * 1000);
+    setInterval(memReport, 30 * 60 * 1000);
+
     const statuses = [
       { name: 'looking for staff so apply', type: 2 },
       { dynamic: 'memberCount', type: 3 },
