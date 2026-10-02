@@ -25,11 +25,19 @@ const client = new Client({
     GatewayIntentBits.DirectMessages,
   ],
 
-  // Keep memory low: small message cache, and don't cache things this bot
+  // Keep memory low: small message/member/user caches, and don't cache things this bot
   // never reads (voice states, presences, reactions, invites, bans, stages).
   makeCache: Options.cacheWithLimits({
     ...Options.DefaultMakeCacheSettings,
-    MessageManager: 50,
+    MessageManager: 25,
+    GuildMemberManager: {
+      maxSize: 100,
+      keepOverLimit: (member) => member.id === member.client.user.id,
+    },
+    UserManager: {
+      maxSize: 100,
+      keepOverLimit: (user) => user.id === user.client.user.id,
+    },
     VoiceStateManager: 0,
     PresenceManager: 0,
     ReactionManager: 0,
