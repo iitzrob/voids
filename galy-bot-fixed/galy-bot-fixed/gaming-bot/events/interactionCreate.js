@@ -73,6 +73,8 @@ function hexToInt(hex) {
 }
 
 function isSupport(member) {
+  if (member?.permissions?.has('Administrator')) return true;
+
   const roleIds = config.supportRoleIds || [];
 
   return roleIds.some(
