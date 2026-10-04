@@ -24,6 +24,7 @@ const {
   createTicket,
   createApplicationTicketChannel,
   claimTicket,
+  unclaimTicket,
   closeTicket,
   buildTicketControlRow,
 } = require('../utils/ticketManager');
@@ -1782,6 +1783,24 @@ module.exports = {
         ) {
 
           await claimTicket(
+            interaction
+          );
+
+          return;
+        }
+
+
+        /* =================================================
+           TICKET UNCLAIM
+        ================================================= */
+
+        if (
+          interaction.customId.startsWith(
+            'ticket_unclaim'
+          )
+        ) {
+
+          await unclaimTicket(
             interaction
           );
 
