@@ -16,6 +16,22 @@ const {
 } = require('./applicationManager');
 const { incrementStat } = require('./staffTracker');
 
+// Custom button emojis
+const CLAIM_EMOJI = '<:Emojis_32x32_295:1545313653719433246>';
+const CLOSE_EMOJI = '<:Emojis_32x32_95:1545306402715598879>';
+const CLOSE_REASON_EMOJI = '<:Emojis_32x32_97:1545306211858260039>';
+
+// "Giveaway Claim" -> "giveaway-claim"
+function slugify(text, fallback = 'ticket') {
+  return (
+    String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || fallback
+  );
+}
+
 
 /* =========================================================
    TICKET METADATA
@@ -66,25 +82,34 @@ function countOpenTicketsForUser(guild, userId) {
    TICKET BUTTONS
 ========================================================= */
 
-function buildTicketControlRow(claimed = false) {
+function buildTicketControlRow(claimed = false, claimerId = null) {
+  // When claimed, the claim button turns into an Unclaim button.
+  // The claimer's ID is stored in the customId so we know who claimed it.
+  const claimButton = claimed
+    ? new ButtonBuilder()
+        .setCustomId(`ticket_unclaim:${claimerId || '0'}`)
+        .setLabel('Unclaim')
+        .setEmoji(CLAIM_EMOJI)
+        .setStyle(ButtonStyle.Secondary)
+    : new ButtonBuilder()
+        .setCustomId('ticket_claim')
+        .setLabel('Claim')
+        .setEmoji(CLAIM_EMOJI)
+        .setStyle(ButtonStyle.Secondary);
+
   return new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('ticket_claim')
-      .setLabel(claimed ? 'Claimed' : 'Claim')
-      .setEmoji('🙋')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(claimed),
+    claimButton,
 
     new ButtonBuilder()
       .setCustomId('ticket_close')
       .setLabel('Close')
-      .setEmoji('🔒')
+      .setEmoji(CLOSE_EMOJI)
       .setStyle(ButtonStyle.Danger),
 
     new ButtonBuilder()
       .setCustomId('ticket_close_reason')
       .setLabel('Close with Reason')
-      .setEmoji('📝')
+      .setEmoji(CLOSE_REASON_EMOJI)
       .setStyle(ButtonStyle.Secondary)
   );
 }
@@ -349,7 +374,7 @@ async function createTicket(
 
 
   const channelOptions = {
-    name: `ticket-${safeName}`,
+    name: `${slugify(category.label)}-${safeName}`.slice(0, 100),
 
     type: ChannelType.GuildText,
 
@@ -685,7 +710,7 @@ async function createApplicationTicketChannel(
 
     const channelOptions = {
       name:
-        `app-${safeName}`,
+        `${slugify(appConfig.label, 'application')}-${safeName}`.slice(0, 100),
 
       type:
         ChannelType.GuildText,
@@ -957,11 +982,13 @@ async function claimTicket(
   }
 
   // Prevent claiming an already claimed ticket.
-  const claimButton = interaction.message.components
+  const alreadyClaimed = interaction.message.components
     .flatMap((row) => row.components)
-    .find((component) => component.customId === 'ticket_claim');
+    .some((component) =>
+      component.customId?.startsWith('ticket_unclaim')
+    );
 
-  if (claimButton?.disabled) {
+  if (alreadyClaimed) {
     return interaction.reply({
       content: 'This ticket has already been claimed.',
       ephemeral: true,
@@ -1013,16 +1040,17 @@ async function claimTicket(
     .setTitle('🙋 Ticket Claimed')
     .setDescription(
       `This ticket has been claimed by ${interaction.user}.\n\n` +
-      'Other ticket staff can no longer see this ticket.'
+      'Other ticket staff can no longer see this ticket.\n' +
+      'Use the **Unclaim** button to release it.'
     )
     .setColor('#57F287');
 
   await interaction.reply({ embeds: [embed] });
 
-  const disabledRow = buildTicketControlRow(true);
+  const claimedRow = buildTicketControlRow(true, interaction.user.id);
 
   await interaction.message.edit({
-    components: [disabledRow],
+    components: [claimedRow],
   }).catch(() => {});
 
   incrementStat(
@@ -1032,6 +1060,102 @@ async function claimTicket(
   ).catch((err) => {
     console.error('Failed to update staff tracker for ticket claim:', err);
   });
+}
+
+
+/* =========================================================
+   UNCLAIM TICKET
+========================================================= */
+
+async function unclaimTicket(
+  interaction
+) {
+  const meta = parseTopic(interaction.channel.topic);
+
+  if (!meta) {
+    return interaction.reply({
+      content: 'This does not look like a ticket channel.',
+      ephemeral: true,
+    });
+  }
+
+  // customId looks like: ticket_unclaim:CLAIMER_ID
+  const claimerId = interaction.customId.split(':')[1];
+
+  const canManage = interaction.member.permissions.has(
+    PermissionsBitField.Flags.ManageChannels
+  );
+
+  if (interaction.user.id !== claimerId && !canManage) {
+    return interaction.reply({
+      content: 'Only the staff member who claimed this ticket can unclaim it.',
+      ephemeral: true,
+    });
+  }
+
+  let roleIds = [];
+
+  if (meta.isCustom && meta.customRoleId) {
+    roleIds = [meta.customRoleId];
+  } else {
+    roleIds = getRoleIdsForTicket(meta.categoryId);
+
+    if (meta.categoryId.startsWith('application_')) {
+      roleIds = getApplicationTicketRoleIds();
+    }
+  }
+
+  // Give the staff roles their access back.
+  for (const roleId of roleIds) {
+    const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
+
+    if (!role) {
+      console.warn(`[TICKET] Could not fetch staff role ${roleId} while unclaiming.`);
+      continue;
+    }
+
+    await interaction.channel.permissionOverwrites.edit(role, {
+      ViewChannel: true,
+      SendMessages: true,
+      ReadMessageHistory: true,
+      ManageMessages: true,
+      AttachFiles: true,
+      EmbedLinks: true,
+    }).catch((err) => {
+      console.error(`[TICKET] Failed to restore ticket access for role ${roleId}:`, err);
+    });
+  }
+
+  // Remove the claimer's personal overwrite (their role covers them again).
+  if (claimerId && claimerId !== meta.userId) {
+    const claimerMember = await interaction.guild.members
+      .fetch(claimerId)
+      .catch(() => null);
+
+    const hasStaffRole =
+      claimerMember &&
+      roleIds.some((roleId) => claimerMember.roles.cache.has(roleId));
+
+    if (hasStaffRole) {
+      await interaction.channel.permissionOverwrites
+        .delete(claimerId)
+        .catch(() => {});
+    }
+  }
+
+  const embed = new EmbedBuilder()
+    .setTitle('Ticket Unclaimed')
+    .setDescription(
+      `${interaction.user} unclaimed this ticket.\n\n` +
+      'Ticket staff can see it again and anyone can claim it.'
+    )
+    .setColor('#FEE75C');
+
+  await interaction.reply({ embeds: [embed] });
+
+  await interaction.message.edit({
+    components: [buildTicketControlRow(false)],
+  }).catch(() => {});
 }
 
 
@@ -1185,6 +1309,7 @@ module.exports = {
   createApplicationTicketChannel,
   submitApplication,
   claimTicket,
+  unclaimTicket,
   closeTicket,
   parseTopic,
   buildTicketControlRow,
