@@ -333,5 +333,15 @@
             "server": "1542362270120681646",
             "ticket": "1542362304669032549"
         }
+    },
+    "antiNuke": {
+        "enabled": true,
+        "windowMinutes": 10,
+        "kickLimit": 10,
+        "kickBanDays": 1,
+        "banLimit": 5,
+        "banBanDays": 5,
+        "alertChannelId": "1530947462897078354",
+        "whitelistedUserIds": []
     }
 }
