@@ -342,6 +342,7 @@
         "banLimit": 5,
         "banBanDays": 5,
         "alertChannelId": "1530947462897078354",
+        "ignoreBots": false,
         "whitelistedUserIds": []
     }
 }
