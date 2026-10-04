@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { isMod, canModerate } = require('../utils/permissions');
 const { logModAction } = require('../utils/modLog');
+const { recordAction } = require('../utils/antiNuke');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -80,6 +81,8 @@ module.exports = {
     await interaction.reply({
       content: `👢 ${target} has been kicked.`,
     });
+
+    recordAction(interaction.guild, interaction.user.id, 'kick').catch(() => {});
 
     await logModAction(interaction.guild, {
       action: 'Kick',
