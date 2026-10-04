@@ -132,7 +132,7 @@ function buildApplicationEmbed(member, appConfig, answers) {
    APPLICATION REVIEW BUTTONS
 
    Sent on the application post in the review channel:
-   Close / Close w/ Reason / Accept / Accept w/ Reason /
+   Deny / Deny w/ Reason / Accept / Accept w/ Reason /
    Open Ticket (staff opens a ticket channel with the
    applicant to discuss it — see createApplicationTicketChannel
    in ticketManager.js).
@@ -159,13 +159,13 @@ function buildDecisionRow(userId, appId, disabled = false) {
       .setDisabled(disabled),
     new ButtonBuilder()
       .setCustomId(`app_close_${userId}_${appId}`)
-      .setLabel('Close')
+      .setLabel('Deny')
       .setEmoji('❌')
       .setStyle(ButtonStyle.Danger)
       .setDisabled(disabled),
     new ButtonBuilder()
       .setCustomId(`app_close_reason_${userId}_${appId}`)
-      .setLabel('Close w/ Reason')
+      .setLabel('Deny w/ Reason')
       .setEmoji('📝')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled),
