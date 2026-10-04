@@ -118,7 +118,7 @@ async function finalizeApplicationDecision({
     return;
   }
 
-  const actionWord = isAccept ? 'Accepted' : 'Closed';
+  const actionWord = isAccept ? 'Accepted' : 'Denied';
 
   const footerText = reason
     ? `${actionWord} by ${interaction.user.tag} — ${reason}`
@@ -130,7 +130,7 @@ async function finalizeApplicationDecision({
 
   if (reason) {
     updatedEmbed.addFields({
-      name: isAccept ? 'Accept Note' : 'Close Reason',
+      name: isAccept ? 'Accept Note' : 'Deny Reason',
       value: reason.slice(0, 1024),
       inline: false,
     });
@@ -191,8 +191,8 @@ async function finalizeApplicationDecision({
         ? `🎉 Your **${label}** application in **${interaction.guild.name}** was accepted!\n**Note:** ${reason}`
         : `🎉 Your **${label}** application in **${interaction.guild.name}** was accepted!`
       : reason
-        ? `Your **${label}** application in **${interaction.guild.name}** was closed.\n**Reason:** ${reason}`
-        : `Your **${label}** application in **${interaction.guild.name}** was closed.`;
+        ? `Your **${label}** application in **${interaction.guild.name}** was denied.\n**Reason:** ${reason}`
+        : `Your **${label}** application in **${interaction.guild.name}** was denied.`;
 
     await applicant.send(dmContent).catch((err) => {
       console.error(
@@ -1939,7 +1939,7 @@ module.exports = {
 
             return interaction.reply({
               content:
-                'Only staff can accept or close applications.',
+                'Only staff can accept or deny applications.',
               ephemeral: true,
             });
           }
@@ -1971,14 +1971,14 @@ module.exports = {
                 `${prefix}modal_${applicantId}_${appId}`
               )
               .setTitle(
-                isAccept ? 'Accept Application' : 'Close Application'
+                isAccept ? 'Accept Application' : 'Deny Application'
               );
 
           const reasonInput =
             new TextInputBuilder()
               .setCustomId('decision_reason_input')
               .setLabel(
-                isAccept ? 'Note for the applicant' : 'Reason for closing'
+                isAccept ? 'Note for the applicant' : 'Reason for denying'
               )
               .setStyle(TextInputStyle.Paragraph)
               .setPlaceholder(
@@ -2139,7 +2139,7 @@ module.exports = {
 
           return interaction.reply({
             content:
-              'Only staff can accept or close applications.',
+              'Only staff can accept or deny applications.',
             ephemeral: true,
           });
         }
