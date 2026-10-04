@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { isAdminRole } = require('../utils/permissions');
 const { logModAction } = require('../utils/modLog');
+const { recordAction } = require('../utils/antiNuke');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -63,6 +64,8 @@ module.exports = {
     }
 
     await interaction.reply(`🔨 ${target} has been banned.`);
+
+    recordAction(interaction.guild, interaction.user.id, 'ban').catch(() => {});
 
     await logModAction(interaction.guild, {
       action: 'Ban',
