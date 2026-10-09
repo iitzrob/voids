@@ -106,13 +106,13 @@ module.exports = {
     } catch (err) {
       console.error('Failed to add user to ticket:', err);
       return interaction.reply({
-        content: '❌ Could not add that user to the ticket. Check my permissions on this channel.',
+        content: ' Could not add that user to the ticket. Check my permissions on this channel.',
         ephemeral: true,
       });
     }
 
     const embed = new EmbedBuilder()
-      .setDescription(`✅ ${target} was added to this ticket by ${interaction.user}.`)
+      .setDescription(` ${target} was added to this ticket by ${interaction.user}.`)
       .setColor('#57F287');
 
     await interaction.reply({ content: `${target}`, embeds: [embed] });
