@@ -127,7 +127,7 @@ async function finalizeApplicationDecision({
     : `${actionWord} by ${interaction.user.tag}`;
 
   const updatedEmbed = EmbedBuilder.from(originalEmbed)
-    .setColor(isAccept ? '#57F287' : '#ED4245')
+    .setColor(0x2b2d31)
     .setFooter({ text: footerText });
 
   if (reason) {
@@ -369,7 +369,7 @@ async function resetApplicationDropdown(message) {
   if (!apps.length) return;
 
   const panel = config.applicationsPanel || {};
-  const container = new ContainerBuilder().setAccentColor(hexToInt(panel.color));
+  const container = new ContainerBuilder();
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`# ${panel.title || 'Applications'}`)
@@ -1083,7 +1083,7 @@ module.exports = {
               permissionOverwrites,
             });
 
-            const embed = new EmbedBuilder()
+            const embed = new EmbedBuilder().setColor(0x2b2d31)
               .setDescription(
                 `hi ${interaction.user}, thanks for reaching out.\n` +
                 'explain what you need and a member of the team will help you shortly.'
@@ -1225,11 +1225,11 @@ module.exports = {
 
           await interaction.update({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().setColor(0x2b2d31)
                 .setDescription(
                   'No worries — thanks for letting us know!'
                 )
-                .setColor('#ED4245'),
+                .setColor(0x2b2d31),
             ],
 
             components: [],
@@ -1252,7 +1252,7 @@ module.exports = {
             if (logChannel) {
 
               const logEmbed =
-                new EmbedBuilder()
+                new EmbedBuilder().setColor(0x2b2d31)
                   .setTitle('Vouch Declined')
                   .addFields(
                     {
@@ -1274,7 +1274,7 @@ module.exports = {
                       inline: true,
                     }
                   )
-                  .setColor('#ED4245')
+                  .setColor(0x2b2d31)
                   .setTimestamp();
 
               await logChannel
@@ -1312,7 +1312,7 @@ module.exports = {
 
           await interaction.update({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().setColor(0x2b2d31)
                 .setDescription(
                   'Awesome! How many stars would you like to give? (1-5)'
                 )
@@ -2256,12 +2256,12 @@ module.exports = {
 
         await interaction.update({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().setColor(0x2b2d31)
               .setDescription(
                 'Thanks for your vouch!'
               )
               .setColor(
-                '#57F287'
+                0x2b2d31
               ),
           ],
 
@@ -2300,7 +2300,7 @@ module.exports = {
                 );
 
             const vouchEmbed =
-              new EmbedBuilder()
+              new EmbedBuilder().setColor(0x2b2d31)
                 .setTitle(
                   '⭐ New Vouch'
                 )
@@ -2354,7 +2354,7 @@ module.exports = {
                   }
                 )
                 .setColor(
-                  '#FEE75C'
+                  0x2b2d31
                 )
                 .setTimestamp();
 
