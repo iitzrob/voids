@@ -35,8 +35,13 @@ function isSupport(member) {
   );
 }
 
+// Extra roles that count as mods (can use the mod commands).
+const EXTRA_MOD_ROLE_IDS = ['1526936584253997146'];
+
 function isMod(member) {
   if (!member) return false;
+
+  if (EXTRA_MOD_ROLE_IDS.some((roleId) => member.roles.cache.has(roleId))) return true;
 
   if ((config.modUserIds || []).includes(member.id)) return true;
   if (hasMaxPerms(member)) return true;
