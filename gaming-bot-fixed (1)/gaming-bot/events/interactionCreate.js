@@ -30,6 +30,7 @@ const {
   getTicketLimitMessage,
 } = require('../utils/ticketManager');
 const { COLOR } = require('../utils/theme');
+const { box } = require('../utils/box');
 
 const {
   hasApplied,
@@ -1083,21 +1084,18 @@ module.exports = {
               permissionOverwrites,
             });
 
-            const embed = new EmbedBuilder().setColor(0x2b2d31)
-              .setDescription(
-                `hi ${interaction.user}, thanks for reaching out.\n` +
-                'explain what you need and a member of the team will help you shortly.'
+            await channel.send(
+              box(
+                [
+                  `${interaction.user} <@&${DEV_ROLE_ID}>`,
+                  `hi ${interaction.user}, thanks for reaching out.\nexplain what you need and a member of the team will help you shortly.`,
+                ],
+                { rows: [buildTicketControlRow()] }
               )
-              .setColor(COLOR);
-
-            await channel.send({
-              content: `${interaction.user} <@&${DEV_ROLE_ID}>`,
-              embeds: [embed],
-              components: [buildTicketControlRow()],
-            });
+            );
 
             await interaction.editReply({
-              content: `Your ticket has been created: ${channel}`,
+              ...box(`✅ Your ticket is ready: ${channel}`),
             });
           } catch (err) {
             console.error(
