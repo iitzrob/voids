@@ -442,7 +442,7 @@ async function createTicket(
 
 
     const welcomeEmbed =
-      new EmbedBuilder()
+      new EmbedBuilder().setColor(0x2b2d31)
         .setTitle(category.label.toLowerCase())
         .setDescription(
           `hi ${user}, thanks for reaching out.\n` +
@@ -799,7 +799,7 @@ async function createApplicationTicketChannel(
     */
 
     const welcomeEmbed =
-      new EmbedBuilder()
+      new EmbedBuilder().setColor(0x2b2d31)
         .setTitle('application ticket')
         .setDescription(
           `hi ${user}, a staff member opened this ticket to talk about your **${appConfig.label}** application.`
@@ -1035,7 +1035,7 @@ async function claimTicket(
     ManageMessages: true,
   }).catch(() => {});
 
-  const embed = new EmbedBuilder()
+  const embed = new EmbedBuilder().setColor(0x2b2d31)
     .setDescription(
       `claimed by ${interaction.user}. other staff can't see this ticket until it's unclaimed.`
     )
@@ -1131,7 +1131,7 @@ async function unclaimTicket(
     }
   }
 
-  const embed = new EmbedBuilder()
+  const embed = new EmbedBuilder().setColor(0x2b2d31)
     .setDescription(`${interaction.user} unclaimed this ticket. staff can see it again.`)
     .setColor(COLOR);
 
@@ -1178,7 +1178,7 @@ async function closeTicket(interaction, reason) {
     });
   }
 
-  const closingEmbed = new EmbedBuilder()
+  const closingEmbed = new EmbedBuilder().setColor(0x2b2d31)
     .setDescription(
       `closed by ${interaction.user}.` +
       (reason ? `\n**reason:** ${reason}` : '') +
@@ -1224,7 +1224,7 @@ async function closeTicket(interaction, reason) {
         .catch(() => null);
 
       if (logChannel && logChannel.isTextBased()) {
-        const logEmbed = new EmbedBuilder()
+        const logEmbed = new EmbedBuilder().setColor(0x2b2d31)
           .setTitle('ticket closed')
           .addFields(
             { name: 'channel', value: `#${interaction.channel.name}`, inline: true },
