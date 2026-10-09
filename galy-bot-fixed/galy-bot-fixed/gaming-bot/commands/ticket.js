@@ -36,7 +36,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName('add')
-        .setDescription('Add a user to this ticket (they get no staff perms)')
+        .setDescription('Add a user to this ticket')
         .addUserOption((opt) =>
           opt.setName('user').setDescription('User to add to the ticket').setRequired(true)
         )
