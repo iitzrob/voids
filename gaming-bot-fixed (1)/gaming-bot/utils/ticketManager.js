@@ -17,6 +17,7 @@ const {
 } = require('./applicationManager');
 const { incrementStat } = require('./staffTracker');
 const { COLOR } = require('./theme');
+const { box, priv, swapRow } = require('./box');
 
 // Custom button emojis
 const CLAIM_EMOJI = '<:Emojis_32x32_295:1545313653719433246>';
@@ -441,61 +442,23 @@ async function createTicket(
       );
 
 
-    const welcomeEmbed =
-      new EmbedBuilder().setColor(0x2b2d31)
-        .setTitle(category.label.toLowerCase())
-        .setDescription(
-          `hi ${user}, thanks for reaching out.\n` +
-          'give us as much detail as you can and a staff member will be with you shortly.'
-        )
-        .setColor(COLOR);
+    const mentions = staffRoleIds.map((roleId) => `<@&${roleId}>`).join(' ');
 
+    const parts = [
+      `${user} ${mentions}`.trim(),
+      `## ${category.label.toLowerCase()}\nhi ${user}, thanks for reaching out.\ngive us as much detail as you can and a staff member will be with you shortly.`,
+    ];
 
-    if (answers.length) {
-      welcomeEmbed.addFields(
-        answers.map((answer) => ({
-          name:
-            String(
-              answer.question
-            ).slice(0, 256),
-
-          value:
-            String(
-              answer.answer ||
-              'No answer'
-            ).slice(0, 1024),
-        }))
+    for (const answer of answers) {
+      parts.push(
+        `**${String(answer.question).slice(0, 200)}**\n${String(answer.answer || 'No answer').slice(0, 500)}`
       );
     }
 
-
-    const mentions =
-      staffRoleIds
-        .map(
-          (roleId) =>
-            `<@&${roleId}>`
-        )
-        .join(' ');
+    await channel.send(box(parts, { rows: [buildTicketControlRow()] }));
 
 
-    await channel.send({
-      content:
-        `${user} ${mentions}`.trim(),
-
-      embeds: [
-        welcomeEmbed,
-      ],
-
-      components: [
-        buildTicketControlRow(),
-      ],
-    });
-
-
-    await interaction.editReply({
-      content:
-        `Your ticket has been created: ${channel}`,
-    });
+    await interaction.editReply(box(`✅ Your ticket is ready: ${channel}`));
 
 
     return channel;
@@ -798,36 +761,17 @@ async function createApplicationTicketChannel(
       normal Claim / Close / Close with Reason controls.
     */
 
-    const welcomeEmbed =
-      new EmbedBuilder().setColor(0x2b2d31)
-        .setTitle('application ticket')
-        .setDescription(
-          `hi ${user}, a staff member opened this ticket to talk about your **${appConfig.label}** application.`
-        )
-        .setColor(COLOR);
+    const mentions = applicationRoleIds.map((roleId) => `<@&${roleId}>`).join(' ');
 
-
-    const mentions =
-      applicationRoleIds
-        .map(
-          (roleId) =>
-            `<@&${roleId}>`
-        )
-        .join(' ');
-
-
-    await channel.send({
-      content:
-        `${user} ${mentions}`.trim(),
-
-      embeds: [
-        welcomeEmbed,
-      ],
-
-      components: [
-        buildTicketControlRow(),
-      ],
-    });
+    await channel.send(
+      box(
+        [
+          `${user} ${mentions}`.trim(),
+          `## application ticket\nhi ${user}, a staff member opened this ticket to talk about your **${appConfig.label}** application.`,
+        ],
+        { rows: [buildTicketControlRow()] }
+      )
+    );
 
 
     console.log(
@@ -1035,19 +979,12 @@ async function claimTicket(
     ManageMessages: true,
   }).catch(() => {});
 
-  const embed = new EmbedBuilder().setColor(0x2b2d31)
-    .setDescription(
-      `claimed by ${interaction.user}. other staff can't see this ticket until it's unclaimed.`
-    )
-    .setColor(COLOR);
+  await interaction.editReply(
+    box(`claimed by ${interaction.user}. other staff can't see this ticket until it's unclaimed.`)
+  );
 
-  await interaction.editReply({ embeds: [embed] });
-
-  const claimedRow = buildTicketControlRow(true, interaction.user.id);
-
-  await interaction.message.edit({
-    components: [claimedRow],
-  }).catch(() => {});
+  const claimedEdit = swapRow(interaction.message, buildTicketControlRow(true, interaction.user.id));
+  if (claimedEdit) await interaction.message.edit(claimedEdit).catch(() => {});
 
   incrementStat(
     interaction.guild,
@@ -1131,15 +1068,10 @@ async function unclaimTicket(
     }
   }
 
-  const embed = new EmbedBuilder().setColor(0x2b2d31)
-    .setDescription(`${interaction.user} unclaimed this ticket. staff can see it again.`)
-    .setColor(COLOR);
+  await interaction.editReply(box(`${interaction.user} unclaimed this ticket. staff can see it again.`));
 
-  await interaction.editReply({ embeds: [embed] });
-
-  await interaction.message.edit({
-    components: [buildTicketControlRow(false)],
-  }).catch(() => {});
+  const unclaimedEdit = swapRow(interaction.message, buildTicketControlRow(false));
+  if (unclaimedEdit) await interaction.message.edit(unclaimedEdit).catch(() => {});
 }
 
 
@@ -1178,24 +1110,16 @@ async function closeTicket(interaction, reason) {
     });
   }
 
-  const closingEmbed = new EmbedBuilder().setColor(0x2b2d31)
-    .setDescription(
-      `closed by ${interaction.user}.` +
+  const closingBox = box(
+    `closed by ${interaction.user}.` +
       (reason ? `\n**reason:** ${reason}` : '') +
       '\n\nsaving transcript, this channel will be deleted shortly.'
-    )
-    .setColor(COLOR);
+  );
 
   if (interaction.deferred || interaction.replied) {
-    await interaction.editReply({
-      embeds: [closingEmbed],
-      components: [],
-    });
+    await interaction.editReply(closingBox);
   } else {
-    await interaction.reply({
-      embeds: [closingEmbed],
-      components: [],
-    });
+    await interaction.reply(closingBox);
   }
 
   const closerId = interaction.user.id;
@@ -1224,26 +1148,18 @@ async function closeTicket(interaction, reason) {
         .catch(() => null);
 
       if (logChannel && logChannel.isTextBased()) {
-        const logEmbed = new EmbedBuilder().setColor(0x2b2d31)
-          .setTitle('ticket closed')
-          .addFields(
-            { name: 'channel', value: `#${interaction.channel.name}`, inline: true },
-            { name: 'opened by', value: `<@${meta.userId}>`, inline: true },
-            { name: 'closed by', value: `<@${closerId}>`, inline: true },
-            { name: 'category', value: meta.categoryId, inline: true }
-          )
-          .setColor(COLOR)
-          .setTimestamp();
-
-        if (reason) {
-          logEmbed.addFields({
-            name: 'reason',
-            value: reason.slice(0, 1024),
-          });
-        }
+        const lines = [
+          '## ticket closed',
+          `**channel:** #${interaction.channel.name}\n` +
+            `**opened by:** <@${meta.userId}>\n` +
+            `**closed by:** <@${closerId}>\n` +
+            `**category:** ${meta.categoryId}` +
+            (reason ? `\n**reason:** ${reason.slice(0, 500)}` : ''),
+          `-# <t:${Math.floor(Date.now() / 1000)}:f>`,
+        ];
 
         await logChannel.send({
-          embeds: [logEmbed],
+          ...box(lines, { file: attachment.name }),
           files: [attachment],
         });
       }
@@ -1256,7 +1172,7 @@ async function closeTicket(interaction, reason) {
     if (opener) {
       const dmAttachment = await buildTranscript(interaction.channel);
       await opener.send({
-        content: 'Here is a transcript of your closed ticket.',
+        ...box('Here is a transcript of your closed ticket.', { file: dmAttachment.name }),
         files: [dmAttachment],
       }).catch(() => {});
     }
