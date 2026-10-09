@@ -91,7 +91,7 @@ function buildApplicationEmbed(member, appConfig, answers) {
     ? Math.floor(member.joinedTimestamp / 1000)
     : null;
 
-  const embed = new EmbedBuilder()
+  const embed = new EmbedBuilder().setColor(0x2b2d31)
     .setTitle(`New Application: ${appConfig.label}`)
     .setColor(appConfig.color || '#2b2d31')
     .setThumbnail(member.user.displayAvatarURL())
