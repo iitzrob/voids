@@ -444,8 +444,10 @@ async function createTicket(
 
     const mentions = staffRoleIds.map((roleId) => `<@&${roleId}>`).join(' ');
 
+    // Pings go in a plain message so role mentions display properly.
+    await channel.send({ content: `${user} ${mentions}`.trim() });
+
     const parts = [
-      `${user} ${mentions}`.trim(),
       `## ${category.label.toLowerCase()}\nhi ${user}, thanks for reaching out.\ngive us as much detail as you can and a staff member will be with you shortly.`,
     ];
 
@@ -763,10 +765,11 @@ async function createApplicationTicketChannel(
 
     const mentions = applicationRoleIds.map((roleId) => `<@&${roleId}>`).join(' ');
 
+    await channel.send({ content: `${user} ${mentions}`.trim() });
+
     await channel.send(
       box(
         [
-          `${user} ${mentions}`.trim(),
           `## application ticket\nhi ${user}, a staff member opened this ticket to talk about your **${appConfig.label}** application.`,
         ],
         { rows: [buildTicketControlRow()] }
