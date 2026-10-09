@@ -1084,10 +1084,11 @@ module.exports = {
               permissionOverwrites,
             });
 
+            await channel.send({ content: `${interaction.user} <@&${DEV_ROLE_ID}>` });
+
             await channel.send(
               box(
                 [
-                  `${interaction.user} <@&${DEV_ROLE_ID}>`,
                   `hi ${interaction.user}, thanks for reaching out.\nexplain what you need and a member of the team will help you shortly.`,
                 ],
                 { rows: [buildTicketControlRow()] }
