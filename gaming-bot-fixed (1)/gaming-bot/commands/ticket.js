@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const { parseTopic, getStaffRoleIds } = require('../utils/ticketManager');
 const { incrementStat } = require('../utils/staffTracker');
-const { fail, done, card } = require('../utils/reply');
+const { fail } = require('../utils/reply');
+const { box } = require('../utils/box');
 
 const P = PermissionsBitField.Flags;
 
@@ -59,10 +60,7 @@ module.exports = {
         return fail(interaction, 'Couldn\'t add them. Check my permissions here.');
       }
 
-      return interaction.reply({
-        content: `${target}`,
-        embeds: [card(`${target} was added by ${interaction.user}.`)],
-      });
+      return interaction.reply(box(`${target} was added by ${interaction.user}.`));
     }
 
     /* ---------- rename ---------- */
@@ -81,10 +79,10 @@ module.exports = {
         await interaction.channel.setName(name);
       } catch (err) {
         console.error('[ticket] rename failed:', err);
-        return interaction.editReply({ embeds: [card('❌ Couldn\'t rename. Discord limits renames, try again shortly.', 0xed4245)] });
+        return interaction.editReply(box("❌ Couldn't rename. Discord limits renames, try again shortly."));
       }
 
-      await interaction.editReply({ embeds: [card(`✅ Renamed to **${name}**.`)] });
+      await interaction.editReply(box(`✅ Renamed to **${name}**.`));
 
       incrementStat(interaction.guild, interaction.user.id, 'ticketsRenamed').catch(() => {});
     }
